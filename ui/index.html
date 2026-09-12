@@ -1,410 +1,940 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATLAS - Cross-Chain Capability Derivation</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Monaco', 'Menlo', monospace;
-            background: #0a0a0a;
-            color: #00ff41;
-            min-height: 100vh;
-        }
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        
-        .header {
-            text-align: center;
-            padding: 40px 0;
-            border-bottom: 1px solid #00ff41;
-            margin-bottom: 40px;
-        }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .header .subtitle { color: #888; font-size: 1.2em; }
-        
-        .screen {
-            display: none;
-            background: #111;
-            border: 1px solid #00ff41;
-            border-radius: 8px;
-            padding: 30px;
-            margin-bottom: 20px;
-        }
-        .screen.active { display: block; }
-        .screen h2 { 
-            color: #00ff41; 
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-        
-        .evidence-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px;
-            background: #1a1a1a;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            border-left: 3px solid #00ff41;
-        }
-        .evidence-item .status { color: #00ff41; }
-        .evidence-item .amount { color: #fff; font-weight: bold; }
-        
-        .capability-display {
-            background: #1a1a1a;
-            border: 2px solid #00ff41;
-            border-radius: 8px;
-            padding: 25px;
-            margin: 20px 0;
-        }
-        .capability-display .label { color: #888; font-size: 0.9em; }
-        .capability-display .value { color: #fff; font-size: 1.2em; margin: 5px 0; }
-        .capability-display .highlight { color: #00ff41; font-size: 2em; font-weight: bold; }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        .status-badge.active { background: #00ff41; color: #000; }
-        .status-badge.blocked { background: #ff4141; color: #fff; }
-        
-        .execution-panel {
-            background: #1a1a1a;
-            border-radius: 8px;
-            padding: 25px;
-            margin: 20px 0;
-        }
-        .input-group {
-            margin-bottom: 20px;
-        }
-        .input-group label { color: #888; display: block; margin-bottom: 5px; }
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-radius: 4px;
-            color: #fff;
-            font-size: 1.2em;
-            font-family: inherit;
-        }
-        .input-group input:focus {
-            outline: none;
-            border-color: #00ff41;
-        }
-        
-        button {
-            background: #00ff41;
-            color: #000;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.1em;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: inherit;
-            width: 100%;
-        }
-        button:hover { background: #00cc33; }
-        button:disabled { background: #333; color: #666; cursor: not-allowed; }
-        button.attack { background: #ff4141; }
-        button.attack:hover { background: #cc3333; }
-        
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            border-radius: 4px;
-            font-family: inherit;
-        }
-        .result.success { 
-            background: #0a2a0a; 
-            border: 1px solid #00ff41;
-            color: #00ff41;
-        }
-        .result.error { 
-            background: #2a0a0a; 
-            border: 1px solid #ff4141;
-            color: #ff4141;
-        }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .nav-buttons button { flex: 1; }
-        .nav-buttons button.secondary {
-            background: #333;
-            color: #fff;
-        }
-        .nav-buttons button.secondary:hover { background: #444; }
-        
-        .flow-diagram {
-            text-align: center;
-            padding: 30px;
-            background: #1a1a1a;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-size: 0.9em;
-            line-height: 2;
-        }
-        .flow-diagram .arrow { color: #00ff41; }
-        
-        .attack-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .attack-btn {
-            background: #1a1a1a;
-            border: 1px solid #ff4141;
-            color: #ff4141;
-            padding: 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-family: inherit;
-            text-align: left;
-        }
-        .attack-btn:hover { background: #2a1a1a; }
-        .attack-btn .name { font-weight: bold; margin-bottom: 5px; }
-        .attack-btn .desc { font-size: 0.8em; color: #888; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATLAS - Cross-Chain Capability Derivation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============ CSS VARIABLES / TOKENS ============ */
+    :root {
+      /* Light mode (Landing/Hero) */
+      --bg-light: #E5E5E5;
+      --bg-noise: rgba(255,255,255,0.08);
+      --text-primary: #111111;
+      --text-muted: #444444;
+      --accent-neon: #00FF44;
+      --accent-border: rgba(0,255,68,0.3);
+      --border-subtle: #DDDDDD;
+    }
+
+    [data-mode="dark"] {
+      /* Dark mode (Data viz/Canvas) */
+      --bg-light: #080808;
+      --bg-noise: rgba(255,255,255,0.03);
+      --text-primary: #FFFFFF;
+      --text-muted: #AAAAAA;
+      --accent-neon: #00FF44;
+      --accent-border: rgba(0,255,68,0.3);
+      --border-subtle: #222222;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      font-family: 'PP Neue Montreal', 'Helvetica Now', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-primary);
+      transition: background 0.4s, color 0.4s;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============ NOISE BACKGROUND (LIGHT) ============ */
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.4;
+      z-index: 0;
+    }
+
+    /* ============ BASE LAYOUT ============ */
+    #root {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* ============ TOP PERIMETER UI ============ */
+    .top-perimeter {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      pointer-events: none;
+      z-index: 10;
+      background: transparent;
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-left .logo {
+      font-family: 'PP Neue Montreal', 'Helvetica Now', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      text-transform: lowercase;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .top-left .logo .accent {
+      color: var(--accent-neon);
+      font-weight: 700;
+    }
+
+    .top-left .logo .lines {
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .top-right a {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      transition: all 0.2s;
+    }
+
+    .top-right a:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-neon);
+      background: rgba(0,255,68,0.03);
+    }
+
+    .top-center {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ============ LEFT PERIMETER ACCENT ============ */
+    .left-perimeter {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 48px;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .left-perimeter .indicator {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      opacity: 0.5;
+      transform: rotate(-90deg);
+      transform-origin: left top;
+      white-space: nowrap;
+    }
+
+    /* ============ HERO SECTION ============ */
+    .hero {
+      position: relative;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero .container {
+      position: relative;
+      text-align: left;
+      max-width: 920px;
+      width: 100%;
+      padding: 24px 32px;
+      z-index: 5;
+    }
+
+    .hero h1 {
+      font-family: 'PP Neue Montreal', 'Helvetica Now', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 800;
+      font-size: 38px;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      text-transform: lowercase;
+    }
+
+    .hero .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.);
+      border: 1px solid var(--accent-border);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent-neon);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .hero .cta:hover {
+      border-color: var(--accent-neon);
+      background: rgba(0,255,68,0.08);
+      color: var(--text-primary);
+    }
+
+    /* ============ HERO VISUAL (WIREFRAME HUMANOID) ============ */
+    .hero-visual {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      pointer-events: none;
+    }
+
+    .wireframe-human {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .wireframe-human .torso,
+    .wireframe-human .left-arm,
+    .wireframe-human .right-arm,
+    .wireframe-human .left-leg,
+    .wireframe-human .right-leg,
+    .wireframe-human .head {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .wireframe-line {
+      fill: none;
+      stroke: #0A0A0A;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.6;
+    }
+
+    .wireframe-line.accent {
+      stroke: var(--accent-neon);
+      stroke-width: 2;
+      opacity: 1;
+    }
+
+    /* ============ DATA VISUAL / CANVAS SECTION ============ */
+    .data-canvas {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-light);
+      overflow: hidden;
+    }
+
+    .data-canvas .axis-y {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .data-canvas .axis-y .label {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      position: absolute;
+      left: 50%;
+    }
+
+    .data-canvas .stem {
+      fill: none;
+      stroke: var(--accent-neon);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    .data-canvas .node {
+      fill: var(--accent-neon);
+      stroke: var(--text-primary);
+      stroke-width: 1;
+    }
+
+    .data-canvas .wireframe-dot {
+      fill: var(--text-primary);
+      stroke: none;
+    }
+
+    /* ============ NAVIGATION / SCREENS ============ */
+    .screens-nav {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      z-index: 20;
+      pointer-events: auto;
+    }
+
+    .screen-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--accent-neon);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      color: var(--accent-neon);
+    }
+
+    .screen-dot.active,
+    .screen-dot:hover {
+      background: var(--accent-neon);
+      transform: scale(1.3);
+    }
+
+    .screen-dot.label {
+      opacity: 0;
+    }
+
+    .screen-dot.label-active {
+      opacity: 1;
+    }
+
+    /* ============ SCREEN CONTENTS ============ */
+    .screen {
+      display: none;
+      min-height: 80vh;
+      padding: 64px 32px;
+      position: relative;
+    }
+
+    .screen.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .screen h2 {
+      font-family: 'PP Neue Montreal', 'Helvetica Now', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      text-transform: lowercase;
+    }
+
+    .screen .meta {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .screen .content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ============ DEMO FLOW CONTENTS ============ */
+
+    .evidence-screen .verified-list {
+      background: var(--bg-noise);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 32px;
+    }
+
+    .evidence-screen .verified-list h3 {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .evidence-screen .verified-list ul {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .evidence-screen .verified-list li {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .evidence-screen .verified-list .volume {
+      color: var(--accent-neon);
+      font-weight: 600;
+    }
+
+    .capability-screen .capability-card {
+      background: var(--bg-noise);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 32px;
+      margin-top: 32px;
+    }
+
+    .capability-screen .capability-card .subject {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .capability-screen .capability-card .name {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .capability-screen .capability-card .details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .capability-screen .capability-card .detail {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 13px;
+    }
+
+    .execution-screen .action-btn {
+      display: inline-block;
+      padding: 16px 32px;
+      background: var(--accent-neon);
+      color: #0A0A0A;
+      font-family: 'PP Neue Montreal', 'Helvetica Now', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+      text-transform: lowercase;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .execution-screen .action-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 0 0 4px rgba(0,255,68,0.15);
+    }
+
+    .execution-screen .result {
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--bg-noise);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      display: none;
+    }
+
+    .execution-screen .result.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .execution-screen .result .status {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .execution-screen .result .status.pass {
+      color: var(--accent-neon);
+    }
+
+    .execution-screen .result .status.fail {
+      color: #FF4444;
+    }
+
+    /* ============ ATTACK SCREENS ============ */
+    .attack-screen .attack-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 32px;
+    }
+
+    .attack-screen .attack-card {
+      background: var(--bg-noise);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 24px;
+      transition: all 0.2s;
+    }
+
+    .attack-screen .attack-card:hover {
+      border-color: var(--accent-neon);
+      box-shadow: 0 0 0 2px rgba(0,255,68,0.08);
+    }
+
+    .attack-screen .attack-card .attack-name {
+      font-family: 'PP Neue Montreal', 'Helvetica Now', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .attack-screen .attack-card .status {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .attack-screen .attack-card .status.pass {
+      color: var(--accent-neon);
+    }
+
+    .attack-screen .attack-card .status.fail {
+      color: #FF4444;
+    }
+
+    /* ============ BOTTOM METADATA ============ */
+    .bottom-meta {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      pointer-events: none;
+      z-index: 10;
+      background: transparent;
+    }
+
+    .bottom-left .credit {
+      opacity: 0.5;
+    }
+
+    .bottom-right .version {
+      opacity: 0.5;
+    }
+
+    /* ============ MODE SWITCHER ============ */
+    .mode-switcher {
+      position: fixed;
+      top: 72px;
+      right: 32px;
+      z-index: 20;
+      pointer-events: auto;
+    }
+
+    .mode-switcher button {
+      font-family: 'JetBrains Mono', 'Space Mono', 'SF Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-switcher button.active,
+    .mode-switcher button:hover {
+      border-color: var(--accent-neon);
+      color: var(--accent-neon);
+      background: rgba(0,255,68,0.05);
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0s !important;
+        transition-duration: 0s !important;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>ATLAS</h1>
-            <div class="subtitle">Cross-Chain Capability Derivation from Verified State</div>
-        </div>
+  <!-- Noise overlay for light mode -->
+  <div class="noise-overlay" aria-hidden="true"></div>
 
-        <!-- Screen 1: Evidence -->
-        <div class="screen active" id="screen-evidence">
-            <h2>SCREEN 1: VERIFIED CROSS-CHAIN STATE</h2>
-            
-            <div class="flow-diagram">
-                Ethereum Sepolia <span class="arrow">→</span> USC Proof <span class="arrow">→</span> ATLAS Evidence
-            </div>
-            
-            <div class="evidence-item">
-                <span>Repayment #1</span>
-                <span class="amount">$5,000</span>
-                <span class="status">✓ VERIFIED</span>
-            </div>
-            <div class="evidence-item">
-                <span>Repayment #2</span>
-                <span class="amount">$8,000</span>
-                <span class="status">✓ VERIFIED</span>
-            </div>
-            <div class="evidence-item">
-                <span>Repayment #3</span>
-                <span class="amount">$7,000</span>
-                <span class="status">✓ VERIFIED</span>
-            </div>
-            <div class="evidence-item">
-                <span>Repayment #4</span>
-                <span class="amount">$10,000</span>
-                <span class="status">✓ VERIFIED</span>
-            </div>
-            
-            <div style="margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 4px;">
-                <div style="color: #888;">Total Verified Volume</div>
-                <div style="color: #00ff41; font-size: 1.5em; font-weight: bold;">$30,000</div>
-            </div>
-            
-            <div class="nav-buttons">
-                <button onclick="showScreen('screen-capability')">DERIVE CAPABILITY →</button>
-            </div>
-        </div>
-
-        <!-- Screen 2: Capability -->
-        <div class="screen" id="screen-capability">
-            <h2>SCREEN 2: DERIVED AUTHORITY</h2>
-            
-            <div class="capability-display">
-                <div class="label">SUBJECT</div>
-                <div class="value">Agent_07</div>
-                
-                <div class="label">ACTION</div>
-                <div class="value">INCREASE_CREDIT</div>
-                
-                <div class="label">MAXIMUM AUTHORITY</div>
-                <div class="highlight">$25,000</div>
-                
-                <div class="label">TIME-TO-LIVE</div>
-                <div class="value">10 minutes</div>
-                
-                <div class="label">POLICY</div>
-                <div class="value">CREDIT_V3</div>
-                
-                <div class="label">STATUS</div>
-                <div class="status-badge active">ACTIVE</div>
-            </div>
-            
-            <div style="margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 4px;">
-                <div style="color: #888;">Invariant</div>
-                <div style="color: #00ff41; font-family: inherit;">
-                    capability.authority ≤ policy(max) ≤ verified.state
-                </div>
-            </div>
-            
-            <div class="nav-buttons">
-                <button class="secondary" onclick="showScreen('screen-evidence')">← EVIDENCE</button>
-                <button onclick="showScreen('screen-execution')">EXECUTE →</button>
-            </div>
-        </div>
-
-        <!-- Screen 3: Execution -->
-        <div class="screen" id="screen-execution">
-            <h2>SCREEN 3: ENFORCED EXECUTION</h2>
-            
-            <div class="execution-panel">
-                <div class="input-group">
-                    <label>REQUEST AMOUNT</label>
-                    <input type="number" id="amount-input" value="20000" placeholder="Enter amount...">
-                </div>
-                
-                <button onclick="executeHappyPath()">EXECUTE</button>
-                <button class="attack" onclick="executeAttack()" style="margin-top: 10px;">SIMULATE ATTACK: $40,000</button>
-                
-                <div id="execution-result" style="display: none;"></div>
-            </div>
-            
-            <div class="attack-grid">
-                <div class="attack-btn" onclick="simulateAttack('over-limit')">
-                    <div class="name">Attack 1: Over-Limit</div>
-                    <div class="desc">$40K > $25K max</div>
-                </div>
-                <div class="attack-btn" onclick="simulateAttack('expired')">
-                    <div class="name">Attack 2: Expired</div>
-                    <div class="desc">TTL exceeded</div>
-                </div>
-                <div class="attack-btn" onclick="simulateAttack('revoked')">
-                    <div class="name">Attack 3: Revoked</div>
-                    <div class="desc">State deteriorated</div>
-                </div>
-                <div class="attack-btn" onclick="simulateAttack('wrong-agent')">
-                    <div class="name">Attack 4: Wrong Agent</div>
-                    <div class="desc">Non-transferable</div>
-                </div>
-                <div class="attack-btn" onclick="simulateAttack('replay')">
-                    <div class="name">Attack 5: Replay</div>
-                    <div class="desc">Already consumed</div>
-                </div>
-                <div class="attack-btn" onclick="simulateAttack('wrong-source')">
-                    <div class="name">Attack 8: Wrong Source</div>
-                    <div class="desc">Invalid contract</div>
-                </div>
-            </div>
-            
-            <div class="nav-buttons">
-                <button class="secondary" onclick="showScreen('screen-capability')">← CAPABILITY</button>
-                <button class="secondary" onclick="showScreen('screen-evidence')">RESTART DEMO</button>
-            </div>
-        </div>
+  <div id="root">
+    <!-- Top Perimeter UI -->
+    <div class="top-perimeter" role="region" aria-label="Perimeter UI">
+      <div class="top-left">
+        <div class="logo">Mantis<span class="lines">EST. 2024 / REF: 001</span></div>
+      </div>
+      <div class="top-right">
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="top-center">CAPABILITY DERIVATION PROTOCOL</div>
     </div>
 
-    <script>
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
+    <!-- Left Perimeter Accent -->
+    <div class="left-perimeter">
+      <div class="indicator">SCROLL</div>
+    </div>
 
-        function executeHappyPath() {
-            const amount = parseInt(document.getElementById('amount-input').value);
-            const resultDiv = document.getElementById('execution-result');
-            
-            if (amount <= 25000) {
-                resultDiv.className = 'result success';
-                resultDiv.innerHTML = `
-                    <div style="font-weight: bold; margin-bottom: 10px;">✓ EXECUTION SUCCESSFUL</div>
-                    <div>Amount: $${amount.toLocaleString()}</div>
-                    <div>Remaining Authority: $${(25000 - amount).toLocaleString()}</div>
-                    <div style="margin-top: 10px; color: #888;">
-                        Credit limit: $10,000 → $${(10000 + amount).toLocaleString()}
-                    </div>
-                `;
-            } else {
-                resultDiv.className = 'result error';
-                resultDiv.innerHTML = `
-                    <div style="font-weight: bold; margin-bottom: 10px;">✗ EXECUTION BLOCKED</div>
-                    <div>Amount: $${amount.toLocaleString()}</div>
-                    <div>Maximum Authority: $25,000</div>
-                    <div>Error: AMOUNT EXCEEDS CAPABILITY</div>
-                `;
-            }
-            resultDiv.style.display = 'block';
-        }
+    <!-- Hero / Landing Section -->
+    <section class="hero" id="hero">
+      <div class="container">
+        <h1>we create feelings.</h1>
+        <div class="cta">
+          View our reel
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </div>
 
-        function executeAttack() {
-            document.getElementById('amount-input').value = 40000;
-            executeHappyPath();
-        }
+      <!-- Wireframe Humanoid Visual -->
+      <div class="hero-visual">
+        <svg class="wireframe-human" viewBox="0 0 600 600" aria-hidden="true">
+          <!-- Torso -->
+          <path class="wireframe-line" d="M300 100 Q300 200 300 300"/>
+          <!-- Left arm -->
+          <path class="wireframe-line" d="M300 200 Q150 300 100 400"/>
+          <!-- Right arm -->
+          <path class="wireframe-line" d="M300 200 Q450 300 500 400"/>
+          <!-- Left leg -->
+          <path class="wireframe-line" d="M300 300 Q180 450 120 550"/>
+          <!-- Right leg -->
+          <path class="wireframe-line" d="M300 300 Q420 450 480 550"/>
+          <!-- Head -->
+          <circle class="wireframe-line" cx="300" cy="100" r="60"/>
+          <!-- Extended hand (forearm) -->
+          <path class="wireframe-line accent" d="M300 200 Q350 250 380 300"/>
+        </svg>
+      </div>
+    </section>
 
-        function simulateAttack(type) {
-            const resultDiv = document.getElementById('execution-result');
-            let message = '';
-            
-            switch(type) {
-                case 'over-limit':
-                    message = `
-                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: OVER-LIMIT</div>
-                        <div>Requested: $40,000</div>
-                        <div>Maximum: $25,000</div>
-                        <div>CapabilityGuard.revert()</div>
-                    `;
-                    break;
-                case 'expired':
-                    message = `
-                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: EXPIRED</div>
-                        <div>Capability TTL: 600s</div>
-                        <div>Time elapsed: 601s</div>
-                        <div>CapabilityGuard.revert()</div>
-                    `;
-                    break;
-                case 'revoked':
-                    message = `
-                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: REVOKED</div>
-                        <div>Reason: Collateral dropped to 138%</div>
-                        <div>Status: REVOKED</div>
-                        <div>CapabilityGuard.revert()</div>
-                    `;
-                    break;
-                case 'wrong-agent':
-                    message = `
-                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: WRONG AGENT</div>
-                        <div>Capability Subject: Agent_07</div>
-                        <div>Requester: Agent_08</div>
-                        <div>Capabilities are non-transferable</div>
-                    `;
-                    break;
-                case 'replay':
-                    message = `
-                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: REPLAY</div>
-                        <div>Capability Status: CONSUMED</div>
-                        <div>Already used: $25,000</div>
-                        <div>Cannot reuse consumed capability</div>
-                    `;
-                    break;
-                case 'wrong-source':
-                    message = `
-                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: WRONG SOURCE</div>
-                        <div>Expected: AgentHistory.sol</div>
-                        <div>Received: FakeHistory.sol</div>
-                        <div>USC verification failed</div>
-                    `;
-                    break;
-            }
-            
-            resultDiv.className = 'result error';
-            resultDiv.innerHTML = message;
-            resultDiv.style.display = 'block';
+    <!-- Data Canvas Section (Dark mode) -->
+    <section class="data-canvas" id="data-canvas" style="display:none;">
+      <div class="axis-y">
+        <div class="label">0.0 → 1.0</div>
+      </div>
+      <svg class="data-visual" viewBox="0 0 600 600" aria-hidden="true">
+        <!-- Node mesh - generative feel -->
+        <g fill="#FFFFFF" stroke="#FFFFFF" stroke-width="0.5">
+          <circle cx="300" cy="100" r="3" />
+          <circle cx="280" cy="150" r="2" />
+          <circle cx="320" cy="150" r="2" />
+          <circle cx="260" cy="200" r="2" />
+          <circle cx="340" cy="200" r="2" />
+          <circle cx="240" cy="250" r="2" />
+          <circle cx="360" cy="250" r="2" />
+          <circle cx="220" cy="300" r="2" />
+          <circle cx="380" cy="300" r="2" />
+          <circle cx="200" cy="350" r="1" />
+          <circle cx="400" cy="350" r="1" />
+          <circle cx="180" cy="400" r="1" />
+          <circle cx="420" cy="400" r="1" />
+          <circle cx="160" cy="450" r="1" />
+          <circle cx="440" cy="450" r="1" />
+          <circle cx="140" cy="500" r="1" />
+          <circle cx="460" cy="500" r="1" />
+        </g>
+
+        <!-- Stem lines connecting nodes -->
+        <g fill="none" stroke="#00FF44" stroke-width="1.5" stroke-linecap="round">
+          <line x1="300" y1="100" x2="280" y2="150"/>
+          <line x1="300" y1="100" x2="320" y2="150"/>
+          <line x1="280" y1="150" x2="260" y2="200"/>
+          <line x1="320" y1="150" x2="340" y2="200"/>
+          <line x1="260" y1="200" x2="240" y2="250"/>
+          <line x1="340" y1="200" x2="360" y2="250"/>
+          <line x1="240" y1="250" x2="220" y2="300"/>
+          <line x1="360" y1="250" x2="380" y2="300"/>
+          <line x1="220" y1="300" x2="200" y2="350"/>
+          <line x1="380" y1="300" x2="400" y2="350"/>
+          <line x1="200" y1="350" x2="180" y2="400"/>
+          <line x1="400" y1="350" x2="420" y2="400"/>
+          <line x1="180" y1="400" x2="160" y2="450"/>
+          <line x1="420" y1="400" x2="440" y2="450"/>
+        </g>
+
+        <!-- Decimal scatter overlay -->
+        <g fill="#00FF44" font-family="JetBrains Mono, monospace" font-size="8">
+          <text x="280" y="152">0.88</text>
+          <text x="320" y="152">0.76</text>
+          <text x="260" y="202">0.64</text>
+          <text x="340" y="202">0.52</text>
+          <text x="240" y="252">0.40</text>
+          <text x="360" y="252">0.33</text>
+          <text x="220" y="302">0.28</text>
+          <text x="380" y="302">0.17</text>
+          <text x="200" y="352">0.96</text>
+          <text x="400" y="352">0.67</text>
+          <text x="180" y="402">0.83</text>
+          <text x="420" y="402">0.11</text>
+          <text x="160" y="452">0.55</text>
+          <text x="440" y="452">0.91</text>
+          <text x="140" y="502">0.77</text>
+          <text x="460" y="502">0.44</text>
+        </g>
+      </svg>
+    </section>
+
+    <!-- Screens Navigation -->
+    <nav class="screens-nav" aria-label="Screen navigation">
+      <button class="screen-dot active" data-screen="evidence" aria-label="Evidence screen">1</button>
+      <button class="screen-dot" data-screen="capability" aria-label="Capability screen">2</button>
+      <button class="screen-dot" data-screen="execution" aria-label="Execution screen">3</button>
+      <button class="screen-dot" data-screen="attack" aria-label="Attack screen">4</button>
+    </nav>
+
+    <!-- Bottom Metadata -->
+    <div class="bottom-meta" role="region" aria-label="Bottom metadata">
+      <span class="bottom-left">Credit Protocol v3</span>
+      <span class="bottom-right">Version 2024.1</span>
+    </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switcher" role="region" aria-label="Mode switcher">
+      <button class="active" data-mode="light">Light</button>
+      <button data-mode="dark">Dark</button>
+    </div>
+
+    <!-- ============ SCREEN CONTENTS ============ -->
+
+    <!-- Evidence Screen -->
+    <section class="screen active" id="evidence" data-screen="evidence" role="region" aria-label="Evidence screen">
+      <h2>verified cross-chain state</h2>
+      <div class="meta">4 verified facts · $30,000 total volume</div>
+      <div class="content evidence-screen">
+        <div class="verified-list">
+          <h3>repayment events</h3>
+          <ul>
+            <li><span>Repayment #1</span><span class="volume">$5,000</span></li>
+            <li><span>Repayment #2</span><span class="volume">$8,000</span></li>
+            <li><span>Repayment #3</span><span class="volume">$7,000</span></li>
+            <li><span>Repayment #4</span><span class="volume">$10,000</span></li>
+          </ul>
+          <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
+            <div><strong>Total Verified Volume:</strong> <span class="volume">$30,000</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Capability Screen -->
+    <section class="screen" id="capability" data-screen="capability" role="region" aria-label="Capability screen">
+      <h2>capability derivation</h2>
+      <div class="meta">policy: CREDIT_V3 v1 · expires: 10 min</div>
+      <div class="content capability-screen">
+        <div class="capability-card">
+          <div class="subject">Agent_07</div>
+          <div class="name">CAPABILITY #1842...</div>
+          <div class="details">
+            <div class="detail"><strong>Action:</strong> INCREASE_CREDIT</div>
+            <div class="detail"><strong>Maximum:</strong> $25,000</div>
+            <div class="detail"><strong>Remaining:</strong> $25,000</div>
+            <div class="detail"><strong>Issued:</strong> 09:31:42</div>
+            <div class="detail"><strong>Expires:</strong> 09:41:42</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Execution Screen -->
+    <section class="screen" id="execution" data-screen="execution" role="region" aria-label="Execution screen">
+      <h2>execution</h2>
+      <div class="meta">validate capability · execute $20,000</div>
+      <div class="content execution-screen">
+        <button class="action-btn" onclick="executeExecution()">Execute $20,000</button>
+        <div class="result" id="execution-result">
+          <div class="status pass" id="execution-status">EXECUTION SUCCESSFUL</div>
+          <div style="margin-top: 12px;">
+            <strong>Amount:</strong> $20,000<br>
+            <strong>Remaining Authority:</strong> $5,000<br>
+            <strong>Credit limit:</strong> $10,000 → $30,000
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Attack Screen -->
+    <section class="screen" id="attack" data-screen="attack" role="region" aria-label="Attack screen">
+      <h2>security guarantees</h2>
+      <div class="meta">8 attack vectors — all blocked</div>
+      <div class="content attack-screen">
+        <div class="attack-list">
+          <div class="attack-card">
+            <div class="attack-name">Attack 1: Over-Limit</div>
+            <div class="status pass">BLOCKED</div>
+            <div style="margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+              Requested: $40,000 | Maximum Authority: $25,000 | Error: AMOUNT EXCEEDS CAPABILITY
+            </div>
+          </div>
+          <div class="attack-card">
+            <div class="attack-name">Attack 2: Expired</div>
+            <div class="status pass">BLOCKED</div>
+          </div>
+          <div class="attack-card">
+            <div class="attack-name">Attack 3: Revoked State</div>
+            <div class="status pass">BLOCKED</div>
+          </div>
+          <div class="attack-card">
+            <div class="attack-name">Attack 4: Wrong Agent</div>
+            <div class="status pass">BLOCKED</div>
+          </div>
+          <div class="attack-card">
+            <div class="attack-name">Attack 5: Replay</div>
+            <div class="status pass">BLOCKED</div>
+          </div>
+          <div class="attack-card">
+            <div class="attack-name">Attack 6: Wrong Policy</div>
+            <div class="status pass">BLOCKED</div>
+          </div>
+          <div class="attack-card">
+            <div class="attack-name">Attack 7: Fake Evidence</div>
+            <div class="status pass">BLOCKED</div>
+          </div>
+          <div class="attack-card">
+            <div class="attack-name">Attack 8: Wrong Source</div>
+            <div class="status pass">BLOCKED</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Screen navigation
+    document.querySelectorAll('.screen-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        document.querySelectorAll('.screen-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        
+        const screenId = dot.dataset.screen;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+      });
+    });
+
+    // Mode switcher
+    document.querySelectorAll('.mode-switcher button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-switcher button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        if (btn.dataset.mode === 'dark') {
+          document.body.setAttribute('data-mode', 'dark');
+          document.getElementById('hero').style.display = 'none';
+          document.getElementById('data-canvas').style.display = 'block';
+        } else {
+          document.body.removeAttribute('data-mode');
+          document.getElementById('hero').style.display = 'block';
+          document.getElementById('data-canvas').style.display = 'none';
         }
-    </script>
+      });
+    });
+
+    // Execution
+    function executeExecution() {
+      const resultDiv = document.getElementById('execution-result');
+      const statusDiv = document.getElementById('execution-status');
+      
+      resultDiv.classList.add('active');
+      statusDiv.className = 'status pass';
+    }
+  </script>
 </body>
 </html>
