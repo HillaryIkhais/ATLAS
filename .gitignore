@@ -20,3 +20,5 @@ cache/
 *.swp
 *.swo
 *~
+node_modules
+out
