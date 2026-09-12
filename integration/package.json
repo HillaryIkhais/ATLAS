@@ -1,0 +1,13 @@
+{
+  "name": "atlas-integration",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"See README for integration gate requirements\""
+  },
+  "dependencies": {
+    "ethers": "^6.13.0",
+    "@gluwa/usc-sdk": "file:../usc-builder-examples/node_modules/@gluwa/usc-sdk"
+  }
+}

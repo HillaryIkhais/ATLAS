@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATLAS - Cross-Chain Capability Derivation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #0a0a0a;
+            color: #00ff41;
+            min-height: 100vh;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid #00ff41;
+            margin-bottom: 40px;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header .subtitle { color: #888; font-size: 1.2em; }
+        
+        .screen {
+            display: none;
+            background: #111;
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .screen.active { display: block; }
+        .screen h2 { 
+            color: #00ff41; 
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .evidence-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: #1a1a1a;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #00ff41;
+        }
+        .evidence-item .status { color: #00ff41; }
+        .evidence-item .amount { color: #fff; font-weight: bold; }
+        
+        .capability-display {
+            background: #1a1a1a;
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .capability-display .label { color: #888; font-size: 0.9em; }
+        .capability-display .value { color: #fff; font-size: 1.2em; margin: 5px 0; }
+        .capability-display .highlight { color: #00ff41; font-size: 2em; font-weight: bold; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status-badge.active { background: #00ff41; color: #000; }
+        .status-badge.blocked { background: #ff4141; color: #fff; }
+        
+        .execution-panel {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label { color: #888; display: block; margin-bottom: 5px; }
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 1.2em;
+            font-family: inherit;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #00ff41;
+        }
+        
+        button {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
+        }
+        button:hover { background: #00cc33; }
+        button:disabled { background: #333; color: #666; cursor: not-allowed; }
+        button.attack { background: #ff4141; }
+        button.attack:hover { background: #cc3333; }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        .result.success { 
+            background: #0a2a0a; 
+            border: 1px solid #00ff41;
+            color: #00ff41;
+        }
+        .result.error { 
+            background: #2a0a0a; 
+            border: 1px solid #ff4141;
+            color: #ff4141;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .nav-buttons button { flex: 1; }
+        .nav-buttons button.secondary {
+            background: #333;
+            color: #fff;
+        }
+        .nav-buttons button.secondary:hover { background: #444; }
+        
+        .flow-diagram {
+            text-align: center;
+            padding: 30px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 0.9em;
+            line-height: 2;
+        }
+        .flow-diagram .arrow { color: #00ff41; }
+        
+        .attack-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .attack-btn {
+            background: #1a1a1a;
+            border: 1px solid #ff4141;
+            color: #ff4141;
+            padding: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+        }
+        .attack-btn:hover { background: #2a1a1a; }
+        .attack-btn .name { font-weight: bold; margin-bottom: 5px; }
+        .attack-btn .desc { font-size: 0.8em; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ATLAS</h1>
+            <div class="subtitle">Cross-Chain Capability Derivation from Verified State</div>
+        </div>
+
+        <!-- Screen 1: Evidence -->
+        <div class="screen active" id="screen-evidence">
+            <h2>SCREEN 1: VERIFIED CROSS-CHAIN STATE</h2>
+            
+            <div class="flow-diagram">
+                Ethereum Sepolia <span class="arrow">→</span> USC Proof <span class="arrow">→</span> ATLAS Evidence
+            </div>
+            
+            <div class="evidence-item">
+                <span>Repayment #1</span>
+                <span class="amount">$5,000</span>
+                <span class="status">✓ VERIFIED</span>
+            </div>
+            <div class="evidence-item">
+                <span>Repayment #2</span>
+                <span class="amount">$8,000</span>
+                <span class="status">✓ VERIFIED</span>
+            </div>
+            <div class="evidence-item">
+                <span>Repayment #3</span>
+                <span class="amount">$7,000</span>
+                <span class="status">✓ VERIFIED</span>
+            </div>
+            <div class="evidence-item">
+                <span>Repayment #4</span>
+                <span class="amount">$10,000</span>
+                <span class="status">✓ VERIFIED</span>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 4px;">
+                <div style="color: #888;">Total Verified Volume</div>
+                <div style="color: #00ff41; font-size: 1.5em; font-weight: bold;">$30,000</div>
+            </div>
+            
+            <div class="nav-buttons">
+                <button onclick="showScreen('screen-capability')">DERIVE CAPABILITY →</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Capability -->
+        <div class="screen" id="screen-capability">
+            <h2>SCREEN 2: DERIVED AUTHORITY</h2>
+            
+            <div class="capability-display">
+                <div class="label">SUBJECT</div>
+                <div class="value">Agent_07</div>
+                
+                <div class="label">ACTION</div>
+                <div class="value">INCREASE_CREDIT</div>
+                
+                <div class="label">MAXIMUM AUTHORITY</div>
+                <div class="highlight">$25,000</div>
+                
+                <div class="label">TIME-TO-LIVE</div>
+                <div class="value">10 minutes</div>
+                
+                <div class="label">POLICY</div>
+                <div class="value">CREDIT_V3</div>
+                
+                <div class="label">STATUS</div>
+                <div class="status-badge active">ACTIVE</div>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 4px;">
+                <div style="color: #888;">Invariant</div>
+                <div style="color: #00ff41; font-family: inherit;">
+                    capability.authority ≤ policy(max) ≤ verified.state
+                </div>
+            </div>
+            
+            <div class="nav-buttons">
+                <button class="secondary" onclick="showScreen('screen-evidence')">← EVIDENCE</button>
+                <button onclick="showScreen('screen-execution')">EXECUTE →</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Execution -->
+        <div class="screen" id="screen-execution">
+            <h2>SCREEN 3: ENFORCED EXECUTION</h2>
+            
+            <div class="execution-panel">
+                <div class="input-group">
+                    <label>REQUEST AMOUNT</label>
+                    <input type="number" id="amount-input" value="20000" placeholder="Enter amount...">
+                </div>
+                
+                <button onclick="executeHappyPath()">EXECUTE</button>
+                <button class="attack" onclick="executeAttack()" style="margin-top: 10px;">SIMULATE ATTACK: $40,000</button>
+                
+                <div id="execution-result" style="display: none;"></div>
+            </div>
+            
+            <div class="attack-grid">
+                <div class="attack-btn" onclick="simulateAttack('over-limit')">
+                    <div class="name">Attack 1: Over-Limit</div>
+                    <div class="desc">$40K > $25K max</div>
+                </div>
+                <div class="attack-btn" onclick="simulateAttack('expired')">
+                    <div class="name">Attack 2: Expired</div>
+                    <div class="desc">TTL exceeded</div>
+                </div>
+                <div class="attack-btn" onclick="simulateAttack('revoked')">
+                    <div class="name">Attack 3: Revoked</div>
+                    <div class="desc">State deteriorated</div>
+                </div>
+                <div class="attack-btn" onclick="simulateAttack('wrong-agent')">
+                    <div class="name">Attack 4: Wrong Agent</div>
+                    <div class="desc">Non-transferable</div>
+                </div>
+                <div class="attack-btn" onclick="simulateAttack('replay')">
+                    <div class="name">Attack 5: Replay</div>
+                    <div class="desc">Already consumed</div>
+                </div>
+                <div class="attack-btn" onclick="simulateAttack('wrong-source')">
+                    <div class="name">Attack 8: Wrong Source</div>
+                    <div class="desc">Invalid contract</div>
+                </div>
+            </div>
+            
+            <div class="nav-buttons">
+                <button class="secondary" onclick="showScreen('screen-capability')">← CAPABILITY</button>
+                <button class="secondary" onclick="showScreen('screen-evidence')">RESTART DEMO</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function executeHappyPath() {
+            const amount = parseInt(document.getElementById('amount-input').value);
+            const resultDiv = document.getElementById('execution-result');
+            
+            if (amount <= 25000) {
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 10px;">✓ EXECUTION SUCCESSFUL</div>
+                    <div>Amount: $${amount.toLocaleString()}</div>
+                    <div>Remaining Authority: $${(25000 - amount).toLocaleString()}</div>
+                    <div style="margin-top: 10px; color: #888;">
+                        Credit limit: $10,000 → $${(10000 + amount).toLocaleString()}
+                    </div>
+                `;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 10px;">✗ EXECUTION BLOCKED</div>
+                    <div>Amount: $${amount.toLocaleString()}</div>
+                    <div>Maximum Authority: $25,000</div>
+                    <div>Error: AMOUNT EXCEEDS CAPABILITY</div>
+                `;
+            }
+            resultDiv.style.display = 'block';
+        }
+
+        function executeAttack() {
+            document.getElementById('amount-input').value = 40000;
+            executeHappyPath();
+        }
+
+        function simulateAttack(type) {
+            const resultDiv = document.getElementById('execution-result');
+            let message = '';
+            
+            switch(type) {
+                case 'over-limit':
+                    message = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: OVER-LIMIT</div>
+                        <div>Requested: $40,000</div>
+                        <div>Maximum: $25,000</div>
+                        <div>CapabilityGuard.revert()</div>
+                    `;
+                    break;
+                case 'expired':
+                    message = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: EXPIRED</div>
+                        <div>Capability TTL: 600s</div>
+                        <div>Time elapsed: 601s</div>
+                        <div>CapabilityGuard.revert()</div>
+                    `;
+                    break;
+                case 'revoked':
+                    message = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: REVOKED</div>
+                        <div>Reason: Collateral dropped to 138%</div>
+                        <div>Status: REVOKED</div>
+                        <div>CapabilityGuard.revert()</div>
+                    `;
+                    break;
+                case 'wrong-agent':
+                    message = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: WRONG AGENT</div>
+                        <div>Capability Subject: Agent_07</div>
+                        <div>Requester: Agent_08</div>
+                        <div>Capabilities are non-transferable</div>
+                    `;
+                    break;
+                case 'replay':
+                    message = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: REPLAY</div>
+                        <div>Capability Status: CONSUMED</div>
+                        <div>Already used: $25,000</div>
+                        <div>Cannot reuse consumed capability</div>
+                    `;
+                    break;
+                case 'wrong-source':
+                    message = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">✗ ATTACK BLOCKED: WRONG SOURCE</div>
+                        <div>Expected: AgentHistory.sol</div>
+                        <div>Received: FakeHistory.sol</div>
+                        <div>USC verification failed</div>
+                    `;
+                    break;
+            }
+            
+            resultDiv.className = 'result error';
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

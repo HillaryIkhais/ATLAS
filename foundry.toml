@@ -1,0 +1,21 @@
+[profile.default]
+src = "contracts"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.20"
+evm_version = "shanghai"
+bypass_prevrandao = true
+
+[fuzz]
+runs = 1000
+
+[profile.ci.fuzz]
+runs = 5000
+
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"
+cc3-local = "http://127.0.0.1:9944"
+cc3-devnet = "https://rpc.cc3-devnet.creditcoin.network"
+
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
