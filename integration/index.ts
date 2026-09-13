@@ -36,16 +36,12 @@ function packProofBytes(proof, chainKey, blockHeight) {
   // In TS with AbiCoder, encode as:
   //   [txBytes (bytes), ...siblings flat: sibling1(32), isLeft1(0|1), sibling2(32), isLeft2(0|1), ...]
   const txBytes = proof.txBytes;
-  const dataTypes = ["bytes"]; // start with bytes
-  const dataValues = [txBytes]; // first element = txBytes
 
-  for (const s of siblings) {
-    dataTypes.push("bytes32", "bool");
-    dataValues.push(s.sibling);  // already hex 0x + 32 bytes
-    dataValues.push(s.isLeft ? 1 : 0);
-  }
-
-  const data = coder.encode(dataTypes, dataValues);
+  // Correct: encode as (bytes, MerkleProofEntry[]) — Solidity expects tuple array
+  const data = coder.encode(
+    ["bytes", "tuple(bytes32,bool)[]"],
+    [txBytes, siblings.map(s => [s.sibling, s.isLeft ? 1 : 0])]
+  );
 
   // Build InclusionProof: kind=0 (BinaryMerkle), root, data
   const inclusionRoot = proof.merkleProof.root;

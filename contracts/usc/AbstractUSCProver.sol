@@ -23,7 +23,7 @@ import "./BlockProverTypes.sol";
 abstract contract AbstractUSCProver {
     /// @dev keccak256("AuthorityUpdated(uint256,address,bytes32,uint256,uint256,uint64,uint8)")
     bytes32 internal constant AUTHORITY_UPDATED_SIG =
-        0x9e9f7c6a11b02e008df86f47a12e8a70b18409ff08a36ab047e9940225f7cce3;
+        0x151846dc546d791bbd3724826e32bca4c9ff60d27aa50fad111e95ccd8dcd6bf;
 
     error InvalidTransactionEncoding();
     error FailedSourceTransaction();
